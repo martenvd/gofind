@@ -62,7 +62,13 @@ func isFlag() bool {
 func walkPaths() ([]string, error) {
 	var dirs []string
 
-	err := filepath.Walk("/home/martenvd", func(path string, info os.FileInfo, err error) error {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	err = filepath.Walk(currentDir, func(path string, info os.FileInfo, err error) error {
 		if info != nil && info.IsDir() {
 			output, err := exec.Command("ls", "-a", path).Output()
 			if err != nil {
