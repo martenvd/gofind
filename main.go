@@ -68,29 +68,42 @@ func walkPaths() ([]string, error) {
 		return nil, err
 	}
 
+	rgx, err := regexp.Compile(`\B\.git(\b|$|\s)`)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
 	err = filepath.Walk(currentDir, func(path string, info os.FileInfo, err error) error {
-		if info != nil && info.IsDir() {
-			output, err := exec.Command("ls", "-a", path).Output()
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		if info.IsDir() {
+			files, err := os.ReadDir(path)
 			if err != nil {
 				fmt.Println(err)
 				return err
 			}
 
-			git, err := regexp.MatchString(`\B\.git(\b|$|\s)`, string(output))
-			if err != nil {
-				fmt.Println(err)
-			}
-			if git {
-				dirs = append(dirs, path)
+			for _, file := range files {
+				if rgx.MatchString(file.Name()) {
+					dirs = append(dirs, path)
+					break
+				}
 			}
 		}
+
 		return nil
 	})
+
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
-	return dirs, err
+
+	return dirs, nil
 }
 
 func prompt(dirs []string) {
