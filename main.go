@@ -18,13 +18,14 @@ import (
 func main() {
 
 	updateCache := flag.Bool("u", false, "Whether or not to update the gofind cache.")
+	updateCacheFullName := flag.Bool("update", false, "Whether or not to update the gofind cache.")
 	flag.Parse()
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
 	}
-	if *updateCache || !fileExists(homeDir+"/.gofind/dirs.txt") {
+	if *updateCache || *updateCacheFullName || !fileExists(homeDir+"/.gofind/dirs.txt") {
 		dirs, err := walkPaths()
 		if err != nil {
 			log.Fatal(err)
@@ -49,7 +50,7 @@ func fileExists(filename string) bool {
 }
 
 func isFlag() bool {
-	flags := []string{"-u"}
+	flags := []string{"-u", "-update"}
 
 	for _, flag := range flags {
 		if os.Args[1] == flag {
