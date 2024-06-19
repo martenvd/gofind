@@ -12,7 +12,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/manifoldco/promptui"
+	"golang.org/x/term"
 )
 
 func main() {
@@ -38,7 +40,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	prompt(dirs)
+	// fmt.Println(dirs)
+	// prompt(dirs)
+	fuzzyFind(dirs)
 }
 
 func fileExists(filename string) bool {
@@ -212,4 +216,80 @@ func readDirs(homeDir string) ([]string, error) {
 	}
 
 	return dirs, nil
+}
+
+func fuzzyFind(dirs []string) {
+	// Set terminal to raw mode
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		panic(err)
+	}
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+	input := ""
+	selectedIndex := 0
+	fmt.Print("Search: ")
+
+	for {
+		char := make([]byte, 3)
+		_, err := os.Stdin.Read(char)
+		if err != nil {
+			fmt.Println("Error reading character:", err)
+			break
+		}
+		matches := fuzzy.Find(input, dirs)
+
+		if char[0] == 27 && char[1] == 91 { // Arrow keys are escape sequences starting with 27, 91
+			switch char[2] {
+			case 65: // Up arrow
+				if selectedIndex > 0 {
+					selectedIndex--
+				}
+			case 66: // Down arrow
+				selectedIndex++
+			}
+		} else {
+			switch char[0] {
+			case 3: // Ctrl+C
+				return
+			case 127: // Backspace
+				if len(input) > 0 {
+					input = input[:len(input)-1]
+					selectedIndex = 0 // Reset selection on input change
+				}
+			case 13: // Enter
+				if len(matches) > 0 && selectedIndex < len(matches) {
+					fmt.Print("\033[H\033[2J")
+					fmt.Print("\033[3K\rSelected directory:" + matches[selectedIndex] + "\r\n")
+					return
+				}
+			default:
+				input += string(char[0])
+				selectedIndex = 0 // Reset selection on input change
+			}
+		}
+
+		// Clear current line and reprint search prompt and input
+		// fmt.Print("Search: ", input)
+
+		// Perform fuzzy search and display results
+		if selectedIndex >= len(matches) { // Ensure selectedIndex is within bounds
+			selectedIndex = len(matches) - 1
+		}
+
+		// Clear screen
+		// fmt.Print("\033[H\033[2J")
+
+		for i, match := range matches {
+			// fmt.Println("\033[3K\r", match)
+			if i == selectedIndex {
+				fmt.Println("\033[3K\r", "\033[1;4m"+match+"\033[0m") // Highlight selected match
+			} else {
+				fmt.Println("\033[3K\r", match)
+			}
+		}
+
+		fmt.Print("\033[2K\rSearch: ", input) // Clear line and reprint input prompt and current input
+
+	}
 }
