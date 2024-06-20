@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/manifoldco/promptui"
 	"golang.org/x/term"
 )
@@ -219,77 +218,58 @@ func readDirs(homeDir string) ([]string, error) {
 }
 
 func fuzzyFind(dirs []string) {
-	// Set terminal to raw mode
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
-		panic(err)
+		fmt.Println("Failed to set terminal to raw mode:", err)
+		return
 	}
 	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
 	input := ""
-	selectedIndex := 0
-	fmt.Print("Search: ")
+	fmt.Println("Getypte letters: ")
+	fmt.Print("\rZoek: ")
 
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		char := make([]byte, 3)
-		_, err := os.Stdin.Read(char)
+		char, _, err := reader.ReadRune()
 		if err != nil {
-			fmt.Println("Error reading character:", err)
+			fmt.Println("Error reading from stdin:", err)
 			break
 		}
-		matches := fuzzy.Find(input, dirs)
 
-		if char[0] == 27 && char[1] == 91 { // Arrow keys are escape sequences starting with 27, 91
-			switch char[2] {
-			case 65: // Up arrow
-				if selectedIndex > 0 {
-					selectedIndex--
-				}
-			case 66: // Down arrow
-				selectedIndex++
+		if char == '\033' { // Escape karakter gedetecteerd
+			// Lees de volgende twee karakters om te bepalen of het "up" of "down" is
+			nextChar, _ := reader.Peek(2)
+			if string(nextChar) == "[A" { // "up" toets
+				// Consumeer de karakters zodat ze niet in de stdout verschijnen
+				reader.Discard(2)
+				// Voeg hier eventueel logica toe om iets te doen wanneer "up" wordt gedrukt
+				continue
+			} else if string(nextChar) == "[B" { // "down" toets
+				// Consumeer de karakters zodat ze niet in de stdout verschijnen
+				reader.Discard(2)
+				// Voeg hier eventueel logica toe om iets te doen wanneer "down" wordt gedrukt
+				continue
 			}
-		} else {
-			switch char[0] {
-			case 3: // Ctrl+C
-				return
-			case 127: // Backspace
-				if len(input) > 0 {
-					input = input[:len(input)-1]
-					selectedIndex = 0 // Reset selection on input change
-				}
-			case 13: // Enter
-				if len(matches) > 0 && selectedIndex < len(matches) {
-					fmt.Print("\033[H\033[2J")
-					fmt.Print("\033[3K\rSelected directory:" + matches[selectedIndex] + "\r\n")
-					return
-				}
-			default:
-				input += string(char[0])
-				selectedIndex = 0 // Reset selection on input change
-			}
+			// Voeg extra cases toe voor andere toetsen zoals "right" ([C) en "left" ([D) indien nodig
 		}
 
-		// Clear current line and reprint search prompt and input
-		// fmt.Print("Search: ", input)
-
-		// Perform fuzzy search and display results
-		if selectedIndex >= len(matches) { // Ensure selectedIndex is within bounds
-			selectedIndex = len(matches) - 1
-		}
-
-		// Clear screen
-		// fmt.Print("\033[H\033[2J")
-
-		for i, match := range matches {
-			// fmt.Println("\033[3K\r", match)
-			if i == selectedIndex {
-				fmt.Println("\033[3K\r", "\033[1;4m"+match+"\033[0m") // Highlight selected match
-			} else {
-				fmt.Println("\033[3K\r", match)
+		switch char {
+		case '\r': // Enter key
+			fmt.Print("\n\rZoekopdracht voltooid.\n\r")
+			return
+		case 127: // Backspace key
+			if len(input) > 0 {
+				input = input[:len(input)-1]
+				// Wis de huidige regel en toon de bijgewerkte input, voeg een extra spatie toe om overgebleven karakters te overschrijven
+				fmt.Print("\033[1A\033[2K\rGetypte letters: ", input, " \n\033[K\rZoek: ", input, " ")
+				// Beweeg de cursor één positie naar links om de extra spatie niet als deel van de input te tonen
+				fmt.Print("\033[1D")
 			}
+		default:
+			input += string(char)
+			// Update de getypte letters en het zoekveld
+			fmt.Print("\033[1A\033[2K\rGetypte letters: ", input, "\n\033[K\rZoek: ", input)
 		}
-
-		fmt.Print("\033[2K\rSearch: ", input) // Clear line and reprint input prompt and current input
-
 	}
 }
