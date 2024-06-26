@@ -20,13 +20,26 @@ func FuzzyFind(dirs []string) {
 	input := ""
 	fmt.Print("\rSearch: ")
 
-	// selectedIndex := 0
-
+	selectedIndex := len(dirs) - 1
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		results := getFilteredResults(input, dirs)
+
+		if selectedIndex > len(results)-1 {
+			selectedIndex = len(results) - 1
+		} else if selectedIndex < 0 {
+			selectedIndex = 0
+		}
+
+		// selectedIndex = selectedIndex % len(results) // Zorg ervoor dat selectedIndex binnen de grenzen blijft
 		for i, result := range results {
-			if len(results) != 0 {
+			if len(results) != 0 && i == selectedIndex {
+				if i == 0 {
+					fmt.Print("\r\033[1;4m", result, "\033[0m")
+				} else {
+					fmt.Print("\n\r\033[1;4m", result, "\033[0m")
+				}
+			} else {
 				if i == 0 {
 					fmt.Print("\r", result)
 				} else {
@@ -54,6 +67,9 @@ func FuzzyFind(dirs []string) {
 				reader.Discard(2)
 				// Voeg hier eventueel logica toe om iets te doen wanneer "up" wordt gedrukt
 
+				fmt.Print("\033[H\033[2J")
+				selectedIndex--
+
 				// fmt.Print("\rSearch: ", input)
 
 				// if selectedIndex > 0 {
@@ -65,6 +81,9 @@ func FuzzyFind(dirs []string) {
 				reader.Discard(2)
 				// Voeg hier eventueel logica toe om iets te doen wanneer "down" wordt gedrukt
 
+				fmt.Print("\033[H\033[2J")
+				selectedIndex++
+
 				// fmt.Print("\rSearch: ", input)
 				// if selectedIndex < len(dirs)-1 {
 				// }
@@ -72,7 +91,9 @@ func FuzzyFind(dirs []string) {
 			}
 			// Voeg extra cases toe voor andere toetsen zoals "right" ([C) en "left" ([D) indien nodig
 		case '\r': // Enter key
-			fmt.Print("\n\rSearch complete\n\r")
+			fmt.Print("\n\rYou have chosen: ", results[selectedIndex], "\n\r")
+			return
+		case 3: // Ctrl+C
 			return
 		case 127: // Backspace key
 			if len(input) > 0 {
