@@ -33,10 +33,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// fmt.Println(dirs)
 	if len(os.Args) > 1 {
 		app.Prompt(dirs)
-		return
 	} else {
 		app.FuzzyFind(dirs)
 	}
