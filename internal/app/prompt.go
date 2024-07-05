@@ -10,7 +10,7 @@ import (
 	"github.com/martenvd/gofind/internal/utils"
 )
 
-func prompt(dirs []string) {
+func Prompt(dirs []string) {
 
 	var relevantDirs []string
 

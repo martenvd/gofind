@@ -34,6 +34,10 @@ func main() {
 	}
 
 	// fmt.Println(dirs)
-	// prompt(dirs)
-	app.FuzzyFind(dirs)
+	if len(os.Args) > 1 {
+		app.Prompt(dirs)
+		return
+	} else {
+		app.FuzzyFind(dirs)
+	}
 }
