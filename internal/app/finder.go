@@ -1,124 +1,93 @@
 package app
 
 import (
-	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
-	"golang.org/x/term"
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 func FuzzyFind(dirs []string) {
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		fmt.Println("Failed to set terminal to raw mode:", err)
-		return
+	app := tview.NewApplication()
+
+	inputField := tview.NewInputField().
+		SetLabel("Search: ").
+		SetFieldBackgroundColor(tcell.ColorDefault).
+		SetFieldTextColor(tcell.ColorGreen)
+
+	resultsList := tview.NewList().
+		ShowSecondaryText(false).
+		SetHighlightFullLine(true)
+
+	filteredResults := getFilteredResults("", dirs)
+	for _, result := range filteredResults {
+		resultsList.AddItem(result, "", 0, nil)
 	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
-	input := ""
-	fmt.Print("\rSearch: ")
+	flex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(inputField, 2, 1, true).
+		AddItem(resultsList, 0, 10, false)
 
-	selectedIndex := len(dirs) - 1
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		results := getFilteredResults(input, dirs)
-
-		if selectedIndex > len(results)-1 {
-			selectedIndex = len(results) - 1
-		} else if selectedIndex < 0 {
-			selectedIndex = 0
+	inputField.SetChangedFunc(func(text string) {
+		resultsList.Clear()
+		filteredResults := getFilteredResults(text, dirs)
+		for _, result := range filteredResults {
+			resultsList.AddItem(result, "", 0, nil)
 		}
+	})
 
-		// selectedIndex = selectedIndex % len(results) // Zorg ervoor dat selectedIndex binnen de grenzen blijft
-		for i, result := range results {
-			if len(results) != 0 && i == selectedIndex {
-				if i == 0 {
-					fmt.Print("\r\033[1;4m", result, "\033[0m")
-				} else {
-					fmt.Print("\n\r\033[1;4m", result, "\033[0m")
+	inputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyUp, tcell.KeyDown:
+			app.SetFocus(resultsList)
+			resultsList.InputHandler()(event, nil)
+			return nil
+		}
+		return event
+	})
+
+	resultsList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyUp:
+			currentIndex := resultsList.GetCurrentItem()
+			if currentIndex > 0 {
+				resultsList.SetCurrentItem(currentIndex - 1)
+			}
+		case tcell.KeyDown:
+			currentIndex := resultsList.GetCurrentItem()
+			if currentIndex < resultsList.GetItemCount()-1 {
+				resultsList.SetCurrentItem(currentIndex + 1)
+			}
+		case tcell.KeyEnter:
+			if resultsList.GetItemCount() != 0 {
+				currentPath, _ := resultsList.GetItemText(resultsList.GetCurrentItem())
+				app.Stop()
+				currentItemName := strings.Split(currentPath, "/")[len(strings.Split(currentPath, "/"))-1]
+				fmt.Println("Opening", currentItemName)
+				cmd := exec.Command("code", currentPath)
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				err := cmd.Run()
+				if err != nil {
+					fmt.Println(err)
 				}
+				return nil
 			} else {
-				if i == 0 {
-					fmt.Print("\r", result)
-				} else {
-					fmt.Print("\n\r", result)
-				}
-			}
-		}
-		if (len(results) != 0 && input != "") || (len(results) != 0 && input == "") {
-			fmt.Print("\n\rSearch: ", input)
-		} else {
-			fmt.Print("\rSearch: ", input)
-		}
-
-		char, _, err := reader.ReadRune()
-		if err != nil {
-			fmt.Println("Error reading from stdin:", err)
-			break
-		}
-
-		switch char {
-		case '\033': // Escape karakter
-			nextChar, _ := reader.Peek(2)
-			if string(nextChar) == "[A" { // "up" toets
-				// Consumeer de karakters zodat ze niet in de stdout verschijnen
-				reader.Discard(2)
-				// Voeg hier eventueel logica toe om iets te doen wanneer "up" wordt gedrukt
-
-				fmt.Print("\033[H\033[2J")
-				selectedIndex--
-
-				// fmt.Print("\rSearch: ", input)
-
-				// if selectedIndex > 0 {
-				// 	selectedIndex--
-				// }
-				continue
-			} else if string(nextChar) == "[B" { // "down" toets
-				// Consumeer de karakters zodat ze niet in de stdout verschijnen
-				reader.Discard(2)
-				// Voeg hier eventueel logica toe om iets te doen wanneer "down" wordt gedrukt
-
-				fmt.Print("\033[H\033[2J")
-				selectedIndex++
-
-				// fmt.Print("\rSearch: ", input)
-				// if selectedIndex < len(dirs)-1 {
-				// }
-				continue
-			}
-			// Voeg extra cases toe voor andere toetsen zoals "right" ([C) en "left" ([D) indien nodig
-		case '\r': // Enter key
-			fmt.Print("\n\rYou have chosen: ", results[selectedIndex], "\n\r")
-			return
-		case 3: // Ctrl+C
-			return
-		case 127: // Backspace key
-			if len(input) > 0 {
-				// Clear screen
-				fmt.Print("\033[H\033[2J")
-				input = input[:len(input)-1]
-
-				// Wis de huidige regel en toon de bijgewerkte input, voeg een extra spatie toe om overgebleven karakters te overschrijven
-				// fmt.Print("\n\033[K\rSearch: ", input, " ")
-				// if len(results) != 0 {
-				// 	fmt.Print("\n\rSearch: ", input)
-				// } else {
-				// 	fmt.Print("\rSearch: ", input)
-				// }
-				// Beweeg de cursor één positie naar links om de extra spatie niet als deel van de input te tonen
-				// fmt.Print("\033[1D")
+				panic("No results found")
 			}
 		default:
-			// Clear screen
-			fmt.Print("\033[H\033[2J")
-			input += string(char)
-
-			// fmt.Print("\n\033[K\rSearch: ", input)
-			// fmt.Print("\n\rSearch: ", input)
+			inputField.InputHandler()(event, nil)
+			return nil
 		}
+		return nil
+	})
+
+	if err := app.SetRoot(flex, true).SetFocus(inputField).Run(); err != nil {
+		panic(err)
 	}
 }
 
