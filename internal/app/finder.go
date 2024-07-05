@@ -46,6 +46,9 @@ func FuzzyFind(dirs []string) {
 			app.SetFocus(resultsList)
 			resultsList.InputHandler()(event, nil)
 			return nil
+		case tcell.KeyEnter:
+			openInVSCode(resultsList.GetItemCount(), resultsList, app)
+			return nil
 		}
 		return event
 	})
@@ -63,22 +66,7 @@ func FuzzyFind(dirs []string) {
 				resultsList.SetCurrentItem(currentIndex + 1)
 			}
 		case tcell.KeyEnter:
-			if resultsList.GetItemCount() != 0 {
-				currentPath, _ := resultsList.GetItemText(resultsList.GetCurrentItem())
-				app.Stop()
-				currentItemName := strings.Split(currentPath, "/")[len(strings.Split(currentPath, "/"))-1]
-				fmt.Println("Opening", currentItemName)
-				cmd := exec.Command("code", currentPath)
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-				err := cmd.Run()
-				if err != nil {
-					fmt.Println(err)
-				}
-				return nil
-			} else {
-				panic("No results found")
-			}
+			openInVSCode(resultsList.GetItemCount(), resultsList, app)
 		default:
 			inputField.InputHandler()(event, nil)
 			return nil
@@ -99,4 +87,22 @@ func getFilteredResults(input string, dirs []string) []string {
 		}
 	}
 	return filteredResults
+}
+
+func openInVSCode(resultlistCount int, list *tview.List, app *tview.Application) {
+	if resultlistCount != 0 {
+		currentPath, _ := list.GetItemText(list.GetCurrentItem())
+		app.Stop()
+		currentItemName := strings.Split(currentPath, "/")[len(strings.Split(currentPath, "/"))-1]
+		fmt.Println("Opening", currentItemName)
+		cmd := exec.Command("code", currentPath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		panic("No results found")
+	}
 }
