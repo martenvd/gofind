@@ -36,6 +36,6 @@ func main() {
 	if len(os.Args) > 1 {
 		app.Prompt(dirs)
 	} else {
-		app.FuzzyFind(dirs)
+		app.Find(dirs)
 	}
 }

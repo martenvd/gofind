@@ -44,8 +44,9 @@ func Prompt(dirs []string) {
 	}
 
 	prompt := promptui.Select{
-		Label: "Select Directory",
-		Items: relevantDirs,
+		Label:        "Select Directory",
+		Items:        relevantDirs,
+		HideSelected: true,
 	}
 
 	_, result, err := prompt.Run()
@@ -55,7 +56,12 @@ func Prompt(dirs []string) {
 		return
 	}
 
-	fmt.Printf("You selected %s\n", result)
+	currentItemName := strings.Split(result, "/")[len(strings.Split(result, "/"))-1]
+	fmt.Println("To open the directory type:")
+	fmt.Println()
+	fmt.Print("\tcd ", result, "\n")
+	fmt.Println()
+	fmt.Printf("Opening: %s\n", currentItemName)
 
 	cmd := exec.Command("code", result)
 	cmd.Stdout = os.Stdout
