@@ -59,7 +59,7 @@ func Prompt(dirs []string) {
 	currentItemName := strings.Split(result, "/")[len(strings.Split(result, "/"))-1]
 	fmt.Println("To open the directory type:")
 	fmt.Println()
-	fmt.Print("\tcd ", result, "\n")
+	fmt.Print("cd ", result, "\n")
 	fmt.Println()
 	fmt.Printf("Opening: %s\n", currentItemName)
 

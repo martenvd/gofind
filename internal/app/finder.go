@@ -96,7 +96,7 @@ func openInVSCodeFromFinder(resultlistCount int, list *tview.List, app *tview.Ap
 		currentItemName := strings.Split(currentPath, "/")[len(strings.Split(currentPath, "/"))-1]
 		fmt.Println("To open the directory type:")
 		fmt.Println()
-		fmt.Print("\tcd ", currentPath, "\n")
+		fmt.Print("cd ", currentPath, "\n")
 		fmt.Println()
 		fmt.Println("Opening:", currentItemName)
 		cmd := exec.Command("code", currentPath)
