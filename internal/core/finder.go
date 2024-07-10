@@ -1,4 +1,4 @@
-package app
+package core
 
 import (
 	"fmt"
@@ -22,15 +22,23 @@ func Find(dirs []string) {
 		ShowSecondaryText(false).
 		SetHighlightFullLine(true)
 
+	// vimInfo := tview.NewTextArea().
+	// 	SetText("Test", false)
+
 	filteredResults := getFilteredResults("", dirs)
 	for _, result := range filteredResults {
 		resultsList.AddItem(result, "", 0, nil)
 	}
 
+	// flex := tview.NewFlex().
+	// 	SetDirection(tview.FlexRow).
+	// 	AddItem(inputField, 2, 1, true).
+	// 	AddItem(resultsList, 0, 10, false)
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(inputField, 2, 1, true).
+		AddItem(inputField, 0, 1, true).
 		AddItem(resultsList, 0, 10, false)
+		// AddItem(vimInfo, 0, 1, false)
 
 	inputField.SetChangedFunc(func(text string) {
 		resultsList.Clear()
@@ -40,6 +48,7 @@ func Find(dirs []string) {
 		}
 	})
 
+	vimKeys := false
 	inputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyUp, tcell.KeyDown:
@@ -49,11 +58,31 @@ func Find(dirs []string) {
 		case tcell.KeyEnter:
 			openInVSCodeFromFinder(resultsList.GetItemCount(), resultsList, app)
 			return nil
+		case tcell.KeyEscape:
+			app.SetFocus(resultsList)
+			vimKeys = true
+			return nil
 		}
 		return event
 	})
 
 	resultsList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Rune() {
+		case 'k':
+			currentIndex := resultsList.GetCurrentItem()
+			if currentIndex > 0 {
+				resultsList.SetCurrentItem(currentIndex - 1)
+			}
+		case 'j':
+			currentIndex := resultsList.GetCurrentItem()
+			if currentIndex < resultsList.GetItemCount()-1 {
+				resultsList.SetCurrentItem(currentIndex + 1)
+			}
+		case 'i':
+			vimKeys = false
+			app.SetFocus(inputField)
+			return nil
+		}
 		switch event.Key() {
 		case tcell.KeyUp:
 			currentIndex := resultsList.GetCurrentItem()
@@ -68,8 +97,10 @@ func Find(dirs []string) {
 		case tcell.KeyEnter:
 			openInVSCodeFromFinder(resultsList.GetItemCount(), resultsList, app)
 		default:
-			inputField.InputHandler()(event, nil)
-			return nil
+			if !vimKeys {
+				inputField.InputHandler()(event, nil)
+				return nil
+			}
 		}
 		return nil
 	})

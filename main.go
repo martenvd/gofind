@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/martenvd/gofind/internal/app"
+	"github.com/martenvd/gofind/internal/core"
 	"github.com/martenvd/gofind/internal/utils"
 )
 
@@ -25,17 +25,17 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		app.CacheDirs(homeDir, dirs)
+		core.CacheDirs(homeDir, dirs)
 	}
 
-	dirs, err := app.ReadDirs(homeDir)
+	dirs, err := core.ReadDirs(homeDir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if len(os.Args) > 1 {
-		app.Prompt(dirs)
+		core.Prompt(dirs)
 	} else {
-		app.Find(dirs)
+		core.Find(dirs)
 	}
 }
