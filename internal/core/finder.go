@@ -17,28 +17,27 @@ func Find(dirs []string) {
 		SetLabel("Search: ").
 		SetFieldBackgroundColor(tcell.ColorDefault).
 		SetFieldTextColor(tcell.ColorGreen)
+	inputField.SetBorder(true)
 
 	resultsList := tview.NewList().
 		ShowSecondaryText(false).
 		SetHighlightFullLine(true)
+	resultsList.SetBorder(true)
 
-	// vimInfo := tview.NewTextArea().
-	// 	SetText("Test", false)
+	vimInfo := tview.NewTextArea()
+	vimInfo.SetBorder(true)
+	vimInfo.SetText("--INSERT--", true)
 
 	filteredResults := getFilteredResults("", dirs)
 	for _, result := range filteredResults {
 		resultsList.AddItem(result, "", 0, nil)
 	}
 
-	// flex := tview.NewFlex().
-	// 	SetDirection(tview.FlexRow).
-	// 	AddItem(inputField, 2, 1, true).
-	// 	AddItem(resultsList, 0, 10, false)
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(inputField, 0, 1, true).
-		AddItem(resultsList, 0, 10, false)
-		// AddItem(vimInfo, 0, 1, false)
+		AddItem(inputField, 3, 1, true).
+		AddItem(resultsList, 0, 10, false).
+		AddItem(vimInfo, 0, 1, false)
 
 	inputField.SetChangedFunc(func(text string) {
 		resultsList.Clear()
@@ -49,6 +48,8 @@ func Find(dirs []string) {
 	})
 
 	vimKeys := false
+	colonPressed := false
+	quitPressed := false
 	inputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyUp, tcell.KeyDown:
@@ -61,6 +62,7 @@ func Find(dirs []string) {
 		case tcell.KeyEscape:
 			app.SetFocus(resultsList)
 			vimKeys = true
+			vimInfo.SetText("--NORMAL--", true)
 			return nil
 		}
 		return event
@@ -78,8 +80,17 @@ func Find(dirs []string) {
 			if currentIndex < resultsList.GetItemCount()-1 {
 				resultsList.SetCurrentItem(currentIndex + 1)
 			}
+		case ':':
+			vimInfo.SetText(":", true)
+			colonPressed = true
+		case 'q':
+			if colonPressed {
+				vimInfo.SetText(":q", true)
+				quitPressed = true
+			}
 		case 'i':
 			vimKeys = false
+			vimInfo.SetText("--INSERT--", true)
 			app.SetFocus(inputField)
 			return nil
 		}
@@ -95,7 +106,20 @@ func Find(dirs []string) {
 				resultsList.SetCurrentItem(currentIndex + 1)
 			}
 		case tcell.KeyEnter:
-			openInVSCodeFromFinder(resultsList.GetItemCount(), resultsList, app)
+			if colonPressed && quitPressed {
+				app.Stop()
+			} else {
+				openInVSCodeFromFinder(resultsList.GetItemCount(), resultsList, app)
+			}
+		case tcell.KeyBackspace2:
+			if quitPressed {
+				quitPressed = false
+				vimInfo.SetText(":", true)
+			} else if colonPressed {
+				colonPressed = false
+				vimInfo.SetText("--NORMAL--", true)
+			}
+			return nil
 		default:
 			if !vimKeys {
 				inputField.InputHandler()(event, nil)
