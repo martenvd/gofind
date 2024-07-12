@@ -48,8 +48,6 @@ func Find(dirs []string) {
 	})
 
 	vimKeys := false
-	colonPressed := false
-	quitPressed := false
 	inputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyUp, tcell.KeyDown:
@@ -68,31 +66,45 @@ func Find(dirs []string) {
 		return event
 	})
 
+	colonPressed := false
+	input := ""
 	resultsList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
 		switch event.Rune() {
 		case 'k':
-			currentIndex := resultsList.GetCurrentItem()
-			if currentIndex > 0 {
-				resultsList.SetCurrentItem(currentIndex - 1)
+			if colonPressed {
+				input += "k"
+				vimInfo.SetText(input, true)
+			} else {
+				currentIndex := resultsList.GetCurrentItem()
+				if currentIndex > 0 {
+					resultsList.SetCurrentItem(currentIndex - 1)
+				}
 			}
 		case 'j':
-			currentIndex := resultsList.GetCurrentItem()
-			if currentIndex < resultsList.GetItemCount()-1 {
-				resultsList.SetCurrentItem(currentIndex + 1)
+			if colonPressed {
+				input += "j"
+				vimInfo.SetText(input, true)
+			} else {
+				currentIndex := resultsList.GetCurrentItem()
+				if currentIndex < resultsList.GetItemCount()-1 {
+					resultsList.SetCurrentItem(currentIndex + 1)
+				}
 			}
 		case ':':
-			vimInfo.SetText(":", true)
+			input = ":"
+			vimInfo.SetText(input, true)
 			colonPressed = true
-		case 'q':
-			if colonPressed {
-				vimInfo.SetText(":q", true)
-				quitPressed = true
-			}
 		case 'i':
 			vimKeys = false
 			vimInfo.SetText("--INSERT--", true)
 			app.SetFocus(inputField)
 			return nil
+		default:
+			if colonPressed && event.Key() != tcell.KeyBackspace2 && event.Key() != tcell.KeyEnter {
+				input += string(event.Rune())
+				vimInfo.SetText(input, true)
+			}
 		}
 		switch event.Key() {
 		case tcell.KeyUp:
@@ -106,19 +118,26 @@ func Find(dirs []string) {
 				resultsList.SetCurrentItem(currentIndex + 1)
 			}
 		case tcell.KeyEnter:
-			if colonPressed && quitPressed {
+			if colonPressed && input == ":q" {
 				app.Stop()
 			} else {
 				openInVSCodeFromFinder(resultsList.GetItemCount(), resultsList, app)
 			}
 		case tcell.KeyBackspace2:
-			if quitPressed {
-				quitPressed = false
-				vimInfo.SetText(":", true)
-			} else if colonPressed {
+
+			if input == "" {
 				colonPressed = false
 				vimInfo.SetText("--NORMAL--", true)
 			}
+			if colonPressed {
+				input = input[:len(input)-1]
+				vimInfo.SetText(input, true)
+			}
+			return nil
+		case tcell.KeyEscape:
+			colonPressed = false
+			input = ""
+			vimInfo.SetText("--NORMAL--", true)
 			return nil
 		default:
 			if !vimKeys {
