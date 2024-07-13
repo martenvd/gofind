@@ -1,4 +1,6 @@
 // GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o gofind main.go
+// GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o gofind main.go
+
 package main
 
 import (
