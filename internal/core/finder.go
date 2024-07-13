@@ -37,7 +37,7 @@ func Find(dirs []string) {
 		SetDirection(tview.FlexRow).
 		AddItem(inputField, 3, 1, true).
 		AddItem(resultsList, 0, 10, false).
-		AddItem(vimInfo, 0, 1, false)
+		AddItem(vimInfo, 3, 1, false)
 
 	inputField.SetChangedFunc(func(text string) {
 		resultsList.Clear()
@@ -96,10 +96,12 @@ func Find(dirs []string) {
 			vimInfo.SetText(input, true)
 			colonPressed = true
 		case 'i':
-			vimKeys = false
-			vimInfo.SetText("--INSERT--", true)
-			app.SetFocus(inputField)
-			return nil
+			if !colonPressed {
+				vimKeys = false
+				vimInfo.SetText("--INSERT--", true)
+				app.SetFocus(inputField)
+				return nil
+			}
 		default:
 			if colonPressed && event.Key() != tcell.KeyBackspace2 && event.Key() != tcell.KeyEnter {
 				input += string(event.Rune())
@@ -120,7 +122,7 @@ func Find(dirs []string) {
 		case tcell.KeyEnter:
 			if colonPressed && input == ":q" {
 				app.Stop()
-			} else {
+			} else if !colonPressed {
 				openInVSCodeFromFinder(resultsList.GetItemCount(), resultsList, app)
 			}
 		case tcell.KeyBackspace2:
