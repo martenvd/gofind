@@ -3,8 +3,6 @@ package core
 import (
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/manifoldco/promptui"
 	"github.com/martenvd/gofind/internal/utils"
@@ -37,11 +35,7 @@ func Prompt(dirs []string) {
 		}
 	}
 
-	for _, dir := range dirs {
-		if strings.Contains(dir, currentDir) && strings.Contains(strings.ToLower(dir), strings.ToLower(os.Args[arg])) {
-			relevantDirs = append(relevantDirs, dir)
-		}
-	}
+	relevantDirs = utils.GetFilteredResults(currentDir, os.Args[arg], dirs)
 
 	prompt := promptui.Select{
 		Label:        "Select Directory",
@@ -56,19 +50,5 @@ func Prompt(dirs []string) {
 		return
 	}
 
-	currentItemName := strings.Split(result, "/")[len(strings.Split(result, "/"))-1]
-	fmt.Println("To open the directory type:")
-	fmt.Println()
-	fmt.Print("cd ", result, "\n")
-	fmt.Println()
-	fmt.Printf("Opening: %s\n", currentItemName)
-
-	cmd := exec.Command("code", result)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		fmt.Println(err)
-	}
-
+	utils.OpenInVSCodeFromFinder(result, len(relevantDirs))
 }
