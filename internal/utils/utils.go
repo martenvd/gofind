@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 func FileExists(filename string) bool {
@@ -30,6 +31,8 @@ func IsFlag() bool {
 
 func WalkPaths() ([]string, error) {
 	var dirs []string
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -43,34 +46,37 @@ func WalkPaths() ([]string, error) {
 		return nil, err
 	}
 
-	err = filepath.Walk(currentDir, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(currentDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
 
 		if info.IsDir() {
-			files, err := os.ReadDir(path)
-			if err != nil {
-				fmt.Println(err)
-				return err
-			}
-
-			for _, file := range files {
-				if rgx.MatchString(file.Name()) {
-					dirs = append(dirs, path)
-					break
+			wg.Add(1)
+			go func(path string) {
+				defer wg.Done()
+				files, err := os.ReadDir(path)
+				if err != nil {
+					fmt.Println(err)
+					return
 				}
-			}
+
+				for _, file := range files {
+					if rgx.MatchString(file.Name()) {
+						mu.Lock()
+						dirs = append(dirs, path)
+						mu.Unlock()
+						break
+					}
+				}
+			}(path)
 		}
 
 		return nil
 	})
 
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
+	wg.Wait()
 
 	return dirs, nil
 }
