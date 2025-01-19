@@ -13,17 +13,25 @@ import (
 )
 
 func main() {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var filteredPath string
+
+	config := utils.CheckConfig(homeDir)
+	if config["path"] != nil {
+		filteredPath = config["path"].(string)
+	}
 
 	updateCache := flag.Bool("u", false, "Whether or not to update the gofind cache.")
 	updateCacheFullName := flag.Bool("update", false, "Whether or not to update the gofind cache.")
 	flag.Parse()
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
 	if *updateCache || *updateCacheFullName || !utils.FileExists(homeDir+"/.gofind/dirs.txt") {
-		dirs, err := utils.WalkPaths()
+		cache := core.CheckCache(homeDir)
+		dirs, err := utils.WalkPaths(filteredPath, cache)
 		if err != nil {
 			log.Fatal(err)
 		}

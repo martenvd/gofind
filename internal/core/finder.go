@@ -10,6 +10,7 @@ import (
 )
 
 func Find(dirs []string) {
+
 	app := tview.NewApplication()
 
 	// Get the current directory
@@ -46,11 +47,19 @@ func Find(dirs []string) {
 		AddItem(vimInfo, 3, 1, false)
 
 	inputField.SetChangedFunc(func(text string) {
+		currentCursor := resultsList.GetCurrentItem()
+
 		resultsList.Clear()
 		filteredResults := utils.GetFilteredResults(currentDir, text, dirs)
 		for _, result := range filteredResults {
 			resultsList.AddItem(result, "", 0, nil)
 		}
+
+		if currentCursor > resultsList.GetItemCount()-1 {
+			currentCursor = resultsList.GetItemCount() - 1
+		}
+
+		resultsList.SetCurrentItem(currentCursor)
 	})
 
 	vimKeys := false
