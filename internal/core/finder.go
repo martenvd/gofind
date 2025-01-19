@@ -10,7 +10,6 @@ import (
 )
 
 func Find(dirs []string) {
-	// TODO: When scrolling through the list, whenver the list is smaller than the cursor, the cursor should be at the bottom
 
 	app := tview.NewApplication()
 
@@ -52,6 +51,11 @@ func Find(dirs []string) {
 		filteredResults := utils.GetFilteredResults(currentDir, text, dirs)
 		for _, result := range filteredResults {
 			resultsList.AddItem(result, "", 0, nil)
+		}
+
+		// Ensure the cursor is visible
+		if resultsList.GetCurrentItem() >= resultsList.GetItemCount() {
+			resultsList.SetCurrentItem(resultsList.GetItemCount() - 1)
 		}
 	})
 

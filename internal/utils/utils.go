@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -57,7 +58,6 @@ func WalkPaths(cache []string) ([]string, error) {
 
 		if err != nil {
 			fmt.Println(err)
-			return err
 		}
 
 		if info.IsDir() {
@@ -67,7 +67,6 @@ func WalkPaths(cache []string) ([]string, error) {
 				files, err := os.ReadDir(path)
 				if err != nil {
 					fmt.Println(err)
-					return
 				}
 
 				for _, file := range files {
@@ -119,4 +118,25 @@ func OpenInVSCodeFromFinder(selectedItem string, resultlistCount int) {
 	} else {
 		panic("No results found")
 	}
+}
+
+func CheckConfig(homeDir string) {
+	file, err := os.Open(homeDir + "/.gofind/config.json")
+	if err != nil {
+		// fmt.Println("Error opening file:", err)
+		return
+	}
+
+	// Create a new JSON decoder
+	var config map[string]interface{}
+
+	// Read the JSON from file
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&config)
+	if err != nil {
+		fmt.Println("Error decoding JSON:", err)
+		return
+	}
+
+	defer file.Close()
 }
