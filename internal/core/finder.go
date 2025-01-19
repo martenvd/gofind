@@ -47,16 +47,19 @@ func Find(dirs []string) {
 		AddItem(vimInfo, 3, 1, false)
 
 	inputField.SetChangedFunc(func(text string) {
+		currentCursor := resultsList.GetCurrentItem()
+
 		resultsList.Clear()
 		filteredResults := utils.GetFilteredResults(currentDir, text, dirs)
 		for _, result := range filteredResults {
 			resultsList.AddItem(result, "", 0, nil)
 		}
 
-		// Ensure the cursor is visible
-		if resultsList.GetCurrentItem() >= resultsList.GetItemCount() {
-			resultsList.SetCurrentItem(resultsList.GetItemCount() - 1)
+		if currentCursor > resultsList.GetItemCount()-1 {
+			currentCursor = resultsList.GetItemCount() - 1
 		}
+
+		resultsList.SetCurrentItem(currentCursor)
 	})
 
 	vimKeys := false
