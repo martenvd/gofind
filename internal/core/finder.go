@@ -10,6 +10,8 @@ import (
 )
 
 func Find(dirs []string) {
+	// TODO: When scrolling through the list, whenver the list is smaller than the cursor, the cursor should be at the bottom
+
 	app := tview.NewApplication()
 
 	// Get the current directory

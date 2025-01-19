@@ -23,7 +23,8 @@ func main() {
 		log.Fatal(err)
 	}
 	if *updateCache || *updateCacheFullName || !utils.FileExists(homeDir+"/.gofind/dirs.txt") {
-		dirs, err := utils.WalkPaths()
+		cache := core.CheckCache(homeDir)
+		dirs, err := utils.WalkPaths(cache)
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -29,7 +29,7 @@ func IsFlag() bool {
 	return false
 }
 
-func WalkPaths() ([]string, error) {
+func WalkPaths(cache []string) ([]string, error) {
 	var dirs []string
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -47,6 +47,14 @@ func WalkPaths() ([]string, error) {
 	}
 
 	filepath.Walk(currentDir, func(path string, info os.FileInfo, err error) error {
+		// if path is in cache, skip
+		for _, dir := range cache {
+			if path == dir {
+				dirs = append(dirs, path)
+				return nil
+			}
+		}
+
 		if err != nil {
 			fmt.Println(err)
 			return err

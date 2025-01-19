@@ -55,3 +55,26 @@ func ReadDirs(homeDir string) ([]string, error) {
 
 	return dirs, nil
 }
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+func CheckCache(homeDir string) []string {
+	var dirs []string
+
+	if FileExists(homeDir + "/.gofind/dirs.txt") {
+		var err error
+		dirs, err = ReadDirs(homeDir)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+	}
+
+	return dirs
+}
