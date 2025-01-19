@@ -30,7 +30,7 @@ func IsFlag() bool {
 	return false
 }
 
-func WalkPaths(cache []string) ([]string, error) {
+func WalkPaths(filteredPath string, cache []string) ([]string, error) {
 	var dirs []string
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -47,8 +47,11 @@ func WalkPaths(cache []string) ([]string, error) {
 		return nil, err
 	}
 
+	if filteredPath != "" {
+		currentDir = filteredPath
+	}
+
 	filepath.Walk(currentDir, func(path string, info os.FileInfo, err error) error {
-		// if path is in cache, skip
 		for _, dir := range cache {
 			if path == dir {
 				dirs = append(dirs, path)
@@ -120,23 +123,27 @@ func OpenInVSCodeFromFinder(selectedItem string, resultlistCount int) {
 	}
 }
 
-func CheckConfig(homeDir string) {
+func CheckConfig(homeDir string) map[string]interface{} {
 	file, err := os.Open(homeDir + "/.gofind/config.json")
 	if err != nil {
-		// fmt.Println("Error opening file:", err)
-		return
+		return nil
 	}
 
-	// Create a new JSON decoder
 	var config map[string]interface{}
 
-	// Read the JSON from file
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&config)
 	if err != nil {
 		fmt.Println("Error decoding JSON:", err)
-		return
+		return nil
+	}
+
+	if config["path"] == nil {
+		fmt.Println("No version found in config")
+		return nil
 	}
 
 	defer file.Close()
+
+	return config
 }
