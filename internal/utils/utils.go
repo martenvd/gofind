@@ -102,12 +102,18 @@ func OpenInVSCodeFromFinder(selectedItem string, resultlistCount int) {
 		fmt.Println("To open the directory type:")
 		fmt.Println()
 		fmt.Print("cd ", selectedItem, "\n")
+		gofindLastItem := []byte(fmt.Sprintf(selectedItem + "\n"))
+		err := os.WriteFile("/tmp/last_item", gofindLastItem, 0644)
+		if err != nil {
+			fmt.Println(err)
+		}
+
 		fmt.Println()
 		fmt.Println("Opening:", currentItemName)
 		cmd := exec.Command("code", selectedItem)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		err = cmd.Run()
 		if err != nil {
 			fmt.Println(err)
 		}
