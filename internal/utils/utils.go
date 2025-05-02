@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 )
@@ -33,7 +34,6 @@ func IsFlag() bool {
 func WalkPaths(filteredPath string, cache []string) ([]string, error) {
 	var dirs []string
 	var mu sync.Mutex
-	var wg sync.WaitGroup
 
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -52,41 +52,34 @@ func WalkPaths(filteredPath string, cache []string) ([]string, error) {
 	}
 
 	filepath.Walk(currentDir, func(path string, info os.FileInfo, err error) error {
-		for _, dir := range cache {
-			if path == dir {
-				dirs = append(dirs, path)
-				return nil
-			}
-		}
-
 		if err != nil {
 			fmt.Println(err)
 		}
 
-		if info.IsDir() {
-			wg.Add(1)
-			go func(path string) {
-				defer wg.Done()
-				files, err := os.ReadDir(path)
-				if err != nil {
-					fmt.Println(err)
-				}
+		if slices.Contains(cache, path) {
+			dirs = append(dirs, path)
+			return filepath.SkipDir
+		}
 
-				for _, file := range files {
-					if rgx.MatchString(file.Name()) {
-						mu.Lock()
-						dirs = append(dirs, path)
-						mu.Unlock()
-						break
-					}
+		if info.IsDir() {
+			for _, dir := range dirs {
+				if strings.Contains(path, dir) {
+					return filepath.SkipDir
 				}
-			}(path)
+			}
+
+			if rgx.MatchString(info.Name()) {
+				pathToAdd := strings.Split(path, "/.git")[0]
+				mu.Lock()
+				dirs = append(dirs, pathToAdd)
+				mu.Unlock()
+
+				return filepath.SkipDir
+			}
 		}
 
 		return nil
 	})
-
-	wg.Wait()
 
 	return dirs, nil
 }
