@@ -17,8 +17,8 @@ build:
 
 install: build
 	sudo cp ${BINARY_NAME} /usr/local/bin/${BINARY_NAME}
-	sudo cp gfdir /usr/local/bin/gfdir
-	sudo chmod 644 /usr/local/bin/gfdir
+	sudo cp gfdir.sh /usr/local/bin/gfdir
+	sudo chmod 755 /usr/local/bin/gfdir
 	@if ! grep -q "alias gf=" ~/.zshrc; then \
         echo "alias gf='/usr/local/bin/gofind && source /usr/local/bin/gfdir'" >> ~/.zshrc; \
 		echo "Alias 'gf' added to ~/.zshrc"; \
