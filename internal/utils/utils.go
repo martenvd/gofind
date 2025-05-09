@@ -98,14 +98,20 @@ func GetFilteredResults(currentWorkingDirectory string, input string, dirs []str
 
 func OpenInVSCodeFromFinder(selectedItem string, resultlistCount int) {
 	if resultlistCount > 0 {
-		fmt.Println(selectedItem)
+		fmt.Print(selectedItem)
 
 		cmd := exec.Command("code", selectedItem)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
-			fmt.Println(err)
+			cmd := exec.Command("vim", selectedItem)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			newErr := cmd.Run()
+			if newErr != nil {
+				fmt.Println(newErr)
+			}
 		}
 	} else {
 		panic("No results found")
