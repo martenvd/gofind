@@ -105,13 +105,7 @@ func OpenInVSCodeFromFinder(selectedItem string, resultlistCount int) {
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
-			cmd := exec.Command("vim", selectedItem)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			newErr := cmd.Run()
-			if newErr != nil {
-				fmt.Println(newErr)
-			}
+			fmt.Println(err)
 		}
 	} else {
 		panic("No results found")
