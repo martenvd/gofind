@@ -22,10 +22,12 @@ install: build
 	@if ! grep -q "alias gf=" ~/.zshrc; then \
         echo "alias gf='source /usr/local/bin/gfdir'" >> ~/.zshrc; \
 		echo "Alias 'gf' added to ~/.zshrc"; \
+		echo "Please source your .zshrc file!"; \
     fi
 	@if ! grep -q "alias gf=" ~/.bashrc; then \
 		echo "alias gf='source /usr/local/bin/gfdir'" >> ~/.bashrc; \
 		echo "Alias 'gf' added to ~/.bashrc"; \
+		echo "Please source your .bashrc file!"; \
 	fi
 
 clean:
