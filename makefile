@@ -20,11 +20,11 @@ install: build
 	sudo cp gfdir.sh /usr/local/bin/gfdir
 	sudo chmod 755 /usr/local/bin/gfdir
 	@if ! grep -q "alias gf=" ~/.zshrc; then \
-        echo "alias gf='/usr/local/bin/gofind && source /usr/local/bin/gfdir'" >> ~/.zshrc; \
+        echo "alias gf='source /usr/local/bin/gfdir'" >> ~/.zshrc; \
 		echo "Alias 'gf' added to ~/.zshrc"; \
     fi
 	@if ! grep -q "alias gf=" ~/.bashrc; then \
-		echo "alias gf='/usr/local/bin/gofind && source /usr/local/bin/gfdir'" >> ~/.bashrc; \
+		echo "alias gf='source /usr/local/bin/gfdir'" >> ~/.bashrc; \
 		echo "Alias 'gf' added to ~/.bashrc"; \
 	fi
 

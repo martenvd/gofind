@@ -30,7 +30,7 @@ func Prompt(dirs []string) {
 		if len(os.Args) > 2 {
 			arg = 2
 		} else {
-			fmt.Println("You have updated your cache!")
+			fmt.Println("Update!")
 			return
 		}
 	}
