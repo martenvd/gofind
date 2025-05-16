@@ -72,7 +72,7 @@ func Find(dirs []string) {
 		case tcell.KeyEnter:
 			currentPath, _ := resultsList.GetItemText(resultsList.GetCurrentItem())
 			app.Stop()
-			utils.OpenInVSCodeFromFinder(currentPath, resultsList.GetItemCount())
+			utils.OutputPathToStdOut(currentPath, resultsList.GetItemCount())
 			return nil
 		case tcell.KeyEscape:
 			app.SetFocus(resultsList)
@@ -149,7 +149,7 @@ func Find(dirs []string) {
 			} else if !colonPressed {
 				currentPath, _ := resultsList.GetItemText(resultsList.GetCurrentItem())
 				app.Stop()
-				utils.OpenInVSCodeFromFinder(currentPath, resultsList.GetItemCount())
+				utils.OutputPathToStdOut(currentPath, resultsList.GetItemCount())
 			}
 		case tcell.KeyBackspace2:
 

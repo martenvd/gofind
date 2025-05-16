@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -96,17 +95,16 @@ func GetFilteredResults(currentWorkingDirectory string, input string, dirs []str
 	return filteredResults
 }
 
-func OpenInVSCodeFromFinder(selectedItem string, resultlistCount int) {
+func OutputPathToStdOut(selectedItem string, resultlistCount int) {
 	if resultlistCount > 0 {
 		fmt.Print(selectedItem)
-
-		cmd := exec.Command("code", selectedItem)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			fmt.Println(err)
-		}
+		// cmd := exec.Command("code", selectedItem)
+		// cmd.Stdout = os.Stdout
+		// cmd.Stderr = os.Stderr
+		// err := cmd.Run()
+		// if err != nil {
+		// 	fmt.Println(err)
+		// }
 	} else {
 		panic("No results found")
 	}

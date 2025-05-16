@@ -50,5 +50,5 @@ func Prompt(dirs []string) {
 		return
 	}
 
-	utils.OpenInVSCodeFromFinder(result, len(relevantDirs))
+	utils.OutputPathToStdOut(result, len(relevantDirs))
 }
