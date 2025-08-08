@@ -62,7 +62,7 @@ func WalkPaths(filteredPath string, cache []string) ([]string, error) {
 
 		if info.IsDir() {
 			for _, dir := range dirs {
-				if strings.Contains(path, dir) {
+				if dir == path {
 					return filepath.SkipDir
 				}
 			}
