@@ -9,6 +9,25 @@ import (
 	"github.com/rivo/tview"
 )
 
+// halfPageSize is the number of items Ctrl+D / Ctrl+U jumps.
+const halfPageSize = 10
+
+// ClampIndex returns current+delta clamped to [0, maxIndex].
+// maxIndex should be itemCount-1 (last valid index).
+func ClampIndex(current, delta, maxIndex int) int {
+	if maxIndex < 0 {
+		return 0
+	}
+	newIdx := current + delta
+	if newIdx < 0 {
+		return 0
+	}
+	if newIdx > maxIndex {
+		return maxIndex
+	}
+	return newIdx
+}
+
 func Find(dirs []string) {
 
 	app := tview.NewApplication()
@@ -129,6 +148,14 @@ func Find(dirs []string) {
 			}
 		}
 		switch event.Key() {
+		case tcell.KeyCtrlD:
+			newIdx := ClampIndex(resultsList.GetCurrentItem(), halfPageSize, resultsList.GetItemCount()-1)
+			resultsList.SetCurrentItem(newIdx)
+			return nil
+		case tcell.KeyCtrlU:
+			newIdx := ClampIndex(resultsList.GetCurrentItem(), -halfPageSize, resultsList.GetItemCount()-1)
+			resultsList.SetCurrentItem(newIdx)
+			return nil
 		case tcell.KeyUp:
 			currentIndex := resultsList.GetCurrentItem()
 			if currentIndex > 0 {
